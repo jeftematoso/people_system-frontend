@@ -67,4 +67,4 @@ Todas as rotas (exceto autenticação pública, se houver) exigem obrigatoriamen
 ### 📊 Desempenho, Ocorrências e Dashboards
 * `POST /pedagogical-note` - Cria uma evolução pedagógica ou advertência para o aprendiz (Com `title`, `description` e `createdBy`).
 * `POST /evaluation` - Registra a avaliação técnica/comportamental (Comunicação, comportamento, assiduidade e entregas).
-* `GET /pedagogical-dashboard` - Retorna os gráficos e métricas consolidadas de desempenho do Tenant.
+* `GET /pedagogical-dashboard` - Retorna os gráficos e métricas consolidadas de desempenho do Tenant.   
