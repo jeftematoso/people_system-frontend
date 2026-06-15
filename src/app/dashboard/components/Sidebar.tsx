@@ -77,6 +77,60 @@ export default function Sidebar() {
 
         </Link>
 
+        <div className="mt-4 mb-2 px-4">
+
+          <span className="text-xs uppercase text-blue-200">
+
+            Pedagógico
+
+          </span>
+
+        </div>
+
+        <Link
+          href="/dashboard/pedagogical"
+          className="flex items-center gap-3 px-4 py-3 rounded-2xl hover:bg-blue-700 transition-all"
+        >
+
+          <GraduationCap size={22} />
+
+          <span>Dashboard Pedagógico</span>
+
+        </Link>
+
+        <Link
+          href="/dashboard/pedagogical/attendance"
+          className="flex items-center gap-3 px-4 py-3 rounded-2xl hover:bg-blue-700 transition-all"
+        >
+
+          <GraduationCap size={22} />
+
+          <span>Frequência</span>
+
+        </Link>
+
+        <Link
+          href="/dashboard/pedagogical/evaluations"
+          className="flex items-center gap-3 px-4 py-3 rounded-2xl hover:bg-blue-700 transition-all"
+        >
+
+          <GraduationCap size={22} />
+
+          <span>Avaliações</span>
+
+        </Link>
+
+        <Link
+          href="/dashboard/pedagogical/risks"
+          className="flex items-center gap-3 px-4 py-3 rounded-2xl hover:bg-blue-700 transition-all"
+        >
+
+          <GraduationCap size={22} />
+
+          <span>Riscos Pedagógicos</span>
+
+        </Link>
+
         <Link
           href="/dashboard/contracts"
           className="flex items-center gap-3 px-4 py-3 rounded-2xl hover:bg-blue-700 transition-all"

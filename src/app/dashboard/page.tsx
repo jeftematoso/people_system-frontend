@@ -33,8 +33,6 @@ export default function DashboardPage() {
 
   const [expiringContracts, setExpiringContracts] = useState<any[]>([]);
 
-  const [alerts, setAlerts] = useState<any[]>([]); 
-
   const [pedagogicalSummary, setPedagogicalSummary] =
   useState<any>(null);
 
@@ -44,9 +42,14 @@ export default function DashboardPage() {
   const [pedagogicalRisks, setPedagogicalRisks] =
   useState<any[]>([]);
 
+  const [alerts, setAlerts] = useState<any[]>([]); 
+
   const [predictiveRisk, setPredictiveRisk] =
   useState<any[]>([]);
-  
+
+  const [timeline, setTimeline,] =
+  useState<any[]>([]);
+
   const [complianceRanking, setComplianceRanking] =
   useState<any[]>([]);
 
@@ -71,6 +74,8 @@ export default function DashboardPage() {
   const [executiveReport, setExecutiveReport,] =
   useState<any>();
 
+  const [commandCenter, setCommandCenter,] =
+  useState<any[]>([]);
 
   useEffect(() => {
 
@@ -132,6 +137,33 @@ export default function DashboardPage() {
 
         setAiPredictions(
           ai.data
+        );
+
+        const timelineRes =
+          await api.get(
+            "/audit-timeline"
+          );
+        console.log(
+          "TIMELINE:",
+          timelineRes.data
+        );
+        
+        setTimeline(
+          timelineRes.data
+        );
+
+        const commandRes =
+          await api.get(
+            "/command-center"
+          );
+
+          console.log(
+            "ALERTS:",
+            alerts.length
+          );
+
+        setCommandCenter(
+          commandRes.data
         );
 
         const report =
@@ -387,88 +419,100 @@ export default function DashboardPage() {
 
       );
 
+
     const highCompanies =
 
       predictiveRisk.filter(
 
-        (r) =>  
+        (r) =>
 
           r.level === "HIGH"
 
       );
 
-    const riskReasons = {
+    const commandItems = [
 
-      quota:
+      ...criticalCompanies.map(
+        company => ({
 
-        predictiveRisk.reduce(
+          type: "CRITICAL",
 
-          (acc, item) =>
+          title:
+            "Empresa crítica",
 
-            acc + (item.details?.quota || 0),
+          description:
+            company.company,
 
-          0
+          severity:
+            company.level,
 
-        ),
+          score:
+            company.score,
 
-      warnings:
+        })
 
-        predictiveRisk.reduce(
+      ),
 
-          (acc, item) =>
+      ...highCompanies.map(
+        company => ({
 
-            acc + (item.details?.warnings || 0),
+          type: "HIGH",
 
-          0
+          title:
+            "Empresa alto risco",
 
-        ),
+          description:
+            company.company,
 
-      attendance:
+          severity:
+            company.level,
 
-        predictiveRisk.reduce(
+          score:
+            company.score,
 
-          (acc, item) =>
+        })
 
-            acc + (item.details?.attendance || 0),
+      ),
 
-          0
+    ];
 
-        ),
-
-      journeys:
-
-        predictiveRisk.reduce(
-
-          (acc, item) =>
-
-            acc + (item.details?.journeys || 0),
-
-          0
-
-        ),
-
-    };
 
     const riskReasonsChart = [
 
       {
-        reason: "Quota",
-        total: riskReasons.quota,
+        reason: "Empresas LOW",
+
+        total:
+          predictiveRisk.filter(
+            r => r.level === "LOW"
+          ).length,
       },
 
       {
-        reason: "Advertências",
-        total: riskReasons.warnings,
+        reason: "Empresas MEDIUM",
+
+        total:
+          predictiveRisk.filter(
+            r => r.level === "MEDIUM"
+          ).length,
       },
 
       {
-        reason: "Frequência",
-        total: riskReasons.attendance,
+        reason: "Empresas HIGH",
+
+        total:
+          predictiveRisk.filter(
+            r => r.level === "HIGH"
+          ).length,
       },
 
       {
-        reason: "Jornada",
-        total: riskReasons.journeys,
+        reason: "Empresas CRITICAL",
+
+        total:
+          predictiveRisk.filter(
+            r => r.level === "CRITICAL"
+          ).length,
       },
 
     ];
@@ -666,6 +710,13 @@ export default function DashboardPage() {
 
           );
 
+        const riskReasons = {
+          quota: 0,
+          warnings: 0,
+          attendance: 0,
+          journeys: 0,
+        };
+
 
   if (!data) {
   
@@ -708,6 +759,76 @@ export default function DashboardPage() {
         </button>
 
       </div>
+
+      <div className="bg-red-50 border border-red-200 rounded-xl p-6 mb-6">
+
+        <h2 className="font-bold text-red-600 text-xl mb-4">
+
+          Centro de Comando
+
+        </h2>
+
+        {
+
+          commandCenter.length === 0
+
+            ? (
+
+              <p>
+
+                Nenhum alerta ativo
+
+              </p>
+
+            )
+
+            : (
+
+              commandCenter.map(
+
+                (alert) => (
+
+                  <div
+
+                    key={alert.id}
+
+                    className="border-b py-3"
+
+                  >
+
+                    <div className="font-semibold">
+
+                      {alert.title}
+
+                    </div>
+
+                    <div className="text-sm text-gray-600">
+
+                      {alert.description}
+
+                    </div>
+
+                    <div className="text-xs text-red-500">
+
+                      Severidade:
+
+                      {alert.severity}
+
+                    </div>
+
+                  </div>
+
+                )
+
+              )
+
+            )
+
+        }
+
+      </div>
+
+
 
       {executiveReport && (
 
@@ -1598,6 +1719,93 @@ export default function DashboardPage() {
           </div>
 
 
+        <div className="bg-white rounded-xl shadow-md p-6 mb-6">
+
+          <h2 className="text-xl font-bold mb-4">
+
+            Timeline Executiva
+
+          </h2>
+
+          <div className="text-sm text-gray-500 mb-4">
+
+            Eventos registrados:
+
+            {timeline.length}
+
+          </div>
+
+          <div className="space-y-4">
+
+            {timeline.map((item, index) => (
+
+              <div
+
+                key={index}
+
+                className="
+                  border-l-4
+                  border-indigo-500
+                  pl-4
+                  pb-4
+                "
+
+              >
+
+                <div className="text-xs text-gray-500">
+
+                  {
+
+                    new Date(
+                      item.createdAt
+                    ).toLocaleString("pt-BR")
+
+                  }
+
+                </div>
+
+                <div className="font-bold">
+
+                  {item.action}
+
+                </div>
+
+                <div className="text-sm text-gray-700">
+
+                  {item.entity}
+
+                </div>
+
+                <div className="text-sm text-gray-600">
+
+                  {item.description}
+
+                </div>
+
+                {
+
+                  item.userName && (
+
+                    <div className="text-xs text-gray-500">
+
+                      Usuário:
+                      {item.userName}
+
+                    </div>
+
+                  )
+
+                }
+
+              </div>
+
+            ))}
+
+          </div>
+
+        </div>
+        
+     
         <div className="bg-white rounded-xl shadow-md p-5 mb-6">
 
           <h3 className="font-bold mb-3">
@@ -2146,7 +2354,16 @@ export default function DashboardPage() {
 
             <h3 className="font-bold text-red-700">
 
-              {alert.title}
+                {alert.type === "RISK"
+
+                  ? "🏢 Empresa em risco"
+
+                  : alert.type === "CONTRACT"
+
+                    ? "📄 Contrato vencendo"
+
+                    : "🚨 Alerta"
+                }
 
             </h3>
 
