@@ -3,23 +3,58 @@
 import {
   Bell,
   Search,
+  Menu,
 } from "lucide-react";
 
-export default function Header() {
+interface HeaderProps {
+
+  collapsed: boolean;
+
+  setCollapsed: (
+    value: boolean
+  ) => void;
+
+}
+
+export default function Header({
+  collapsed,
+  setCollapsed,
+}: HeaderProps) {
 
   return (
 
     <header className="bg-gradient-to-r from-blue-500 to-blue-400 rounded-3xl p-6 flex items-center justify-between shadow-lg">
 
-      <div>
+      <div className="flex items-center gap-4">
 
-        <h1 className="text-3xl font-bold text-white">
-          Dashboard
-        </h1>
+        <button
+          onClick={() =>
+            setCollapsed(
+              !collapsed
+            )
+          }
+          className="w-12 h-12 rounded-full bg-white/20 flex items-center justify-center hover:bg-white/30 transition"
+        >
 
-        <p className="text-blue-100">
-          Painel administrativo
-        </p>
+          <Menu className="text-white" />
+
+        </button>
+
+        <div>
+
+          <h1 className="text-3xl font-bold text-white">
+
+            Dashboard
+
+          </h1>
+
+          <p className="text-blue-100">
+
+            Painel administrativo
+
+          </p>
+
+        </div>
 
       </div>
 

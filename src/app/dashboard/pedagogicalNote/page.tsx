@@ -20,6 +20,9 @@ useState("");
 const [description, setDescription] =
 useState("");
 
+const [filterApprentice, setFilterApprentice] =
+  useState("");
+
 async function loadData() {
 
 
@@ -39,9 +42,18 @@ try {
     noteRes.data
   );
 
-} catch (error) {
+} catch (error: any) {
 
-  console.error(error);
+  console.log("PEDAGOGICAL NOTE ERROR", error);
+
+  console.log(error.response);
+
+  console.log(error.response?.data);
+
+  alert(
+    error.response?.data?.error ||
+    error.message
+  );
 
 }
 
@@ -102,8 +114,22 @@ loadData();
 
 }, []);
 
-return (
+const filteredNotes =
 
+  filterApprentice
+
+    ? notes.filter(
+
+        note =>
+
+          note.apprenticeId ===
+          filterApprentice
+
+      )
+
+    : notes;
+
+return (
 
 <div className="p-8">
 
@@ -120,34 +146,23 @@ return (
       <select
         value={apprenticeId}
         onChange={(e) =>
-          setApprenticeId(
-            e.target.value
-          )
+          setApprenticeId(e.target.value)
         }
-        className="border p-3 rounded-xl"
+        className="border p-3 rounded-xl mb-4"
       >
 
         <option value="">
-          Selecione o aprendiz
+          Selecione um aprendiz
         </option>
 
-        {apprentices.map(
-          (apprentice) => (
-
-            <option
-              key={apprentice.id}
-              value={apprentice.id}
-            >
-
-              {
-                apprentice.person
-                  ?.name
-              }
-
-            </option>
-
-          )
-        )}
+        {apprentices.map((apprentice) => (
+          <option
+            key={apprentice.id}
+            value={apprentice.id}
+          >
+            {apprentice.person?.name}
+          </option>
+        ))}
 
       </select>
 
@@ -196,6 +211,70 @@ return (
 
   </div>
 
+
+  <div className="grid grid-cols-3 gap-4 mb-8">
+
+    <div className="bg-white rounded-2xl shadow-md p-6">
+
+      <p className="text-gray-500 text-sm">
+
+        Total Observações
+
+      </p>
+
+      <h2 className="text-3xl font-bold">
+
+        {notes.length}
+
+      </h2>
+
+    </div>
+
+    <div className="bg-white rounded-2xl shadow-md p-6">
+
+      <p className="text-gray-500 text-sm">
+
+        Aprendizes Monitorados
+
+      </p>
+
+      <h2 className="text-3xl font-bold">
+
+        {
+
+          new Set(
+
+            notes.map(
+              note =>
+                note.apprenticeId
+            )
+
+          ).size
+
+        }
+
+      </h2>
+
+    </div>
+
+    <div className="bg-white rounded-2xl shadow-md p-6">
+
+      <p className="text-gray-500 text-sm">
+
+        Observações Filtradas
+
+      </p>
+
+      <h2 className="text-3xl font-bold">
+
+        {filteredNotes.length}
+
+      </h2>
+
+    </div>
+
+  </div>
+
   <div className="bg-white rounded-2xl shadow-md p-6">
 
     <h2 className="text-2xl font-bold mb-6">
@@ -203,6 +282,38 @@ return (
       Histórico
 
     </h2>
+
+    <select
+      value={filterApprentice}
+      onChange={(e) =>
+        setFilterApprentice(
+          e.target.value
+        )
+      }
+      className="border p-3 rounded-xl mb-6"
+    >
+
+      <option value="">
+        Todos os aprendizes
+      </option>
+
+      {apprentices.map(
+        apprentice => (
+
+          <option
+            key={apprentice.id}
+            value={apprentice.id}
+          >
+
+            {apprentice.person?.name}
+
+          </option>
+
+        )
+      )}
+
+    </select>
+
 
     <table className="w-full">
 
@@ -228,13 +339,19 @@ return (
 
           </th>
 
+          <th className="text-left pb-4">
+            
+            Data
+
+          </th>
+
         </tr>
 
       </thead>
 
       <tbody>
 
-        {notes.map(
+        {filteredNotes.map(
           (note) => (
 
             <tr
@@ -258,6 +375,47 @@ return (
 
                 {note.description}
 
+              </td>
+
+              <td className="py-4">
+
+                {
+
+                  note.noteDate
+
+                    ? new Date(
+                        note.noteDate
+                      ).toLocaleDateString(
+                        "pt-BR"
+                      )
+
+                    : "-"
+
+                }
+
+              </td>
+
+              <td className="py-4">
+
+                {note.createdBy || "-"}
+
+              </td>
+
+
+              <td className="py-4">
+                {
+                  new Date(
+                    note.noteDate
+                  ).toLocaleDateString("pt-BR")
+                }
+              </td>
+
+              <th className="text-left pb-4">
+                Criado por
+              </th>
+
+              <td className="py-4">
+                {note.createdBy}
               </td>
 
             </tr>

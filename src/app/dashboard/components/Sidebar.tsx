@@ -1,190 +1,524 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
 import {
+  Menu,
   LayoutDashboard,
   Users,
-  FileText,
+  UserPlus,
+  GraduationCap,
   Building2,
+  FileText,
+  ClipboardList,
+  BookOpen,
+  School,
+  ChevronDown,
+  ChevronRight,
+  LogOut,
   BarChart3,
+  AlertTriangle,
+  ShieldAlert,
 } from "lucide-react";
-import { LogOut } from "lucide-react";
-import { GraduationCap } from "lucide-react";
+
 
 export default function Sidebar() {
 
   const router = useRouter();
 
+  const [collapsed, setCollapsed] =
+    useState(false);
+
+  const [openGroup, setOpenGroup] =
+    useState<string | null>(null);
+
+   useEffect(() => {
+
+    const saved =
+      localStorage.getItem(
+        "sidebar-collapsed"
+      );
+
+    if (saved) {
+
+      setCollapsed(
+        JSON.parse(saved)
+      );
+
+    }
+
+  }, []);
+
+  function toggleSidebar() {
+
+    const next =
+      !collapsed;
+
+    setCollapsed(next);
+
+    localStorage.setItem(
+      "sidebar-collapsed",
+      JSON.stringify(next)
+    );
+
+  }
+
+  function handleLogout() {
+
+    localStorage.removeItem(
+      "token"
+    );
+
+    router.push("/login");
+
+  }
+
+  function toggleGroup(
+    group: string
+  ) {
+
+    setOpenGroup(
+      openGroup === group
+        ? null
+        : group
+    );
+
+  }
+
+  function menuClass() {
+
+    return `
+      flex items-center gap-3 p-2 rounded
+      hover:bg-gray-800
+    `;
+
+  }
+
   return (
 
-    <aside className="w-72 min-h-screen bg-gradient-to-b from-blue-950 to-blue-800 text-white p-6 flex flex-col">
+    <aside
+      className={`
+        bg-gray-900
+        text-white
+        h-screen
+        transition-all
+        duration-300
+        overflow-y-auto
 
-      <div className="mb-12">
+        ${
+          collapsed
+            ? "w-20"
+            : "w-72"
+        }
+      `}
+    >
 
-        <h1 className="text-4xl font-bold">
-          Jovem
-        </h1>
+      <div className="p-4">
 
-        <p className="text-3xl font-light">
-          Aprendiz
-        </p>
+        <div className="flex items-center justify-between mb-8">
 
-      </div>
+          {!collapsed && (
 
-      <nav className="flex flex-col gap-3">
+            <h1 className="font-bold text-xl">
 
-        <Link
-          href="/dashboard"
-          className="flex items-center gap-3 px-4 py-3 rounded-2xl hover:bg-blue-700 transition-all"
-        >
+              People System
 
-          <LayoutDashboard size={22} />
+            </h1>
 
-          <span>Dashboard</span>
+          )}
 
-        </Link>
+          <button
+            onClick={
+              toggleSidebar
+            }
+          >
 
-        <Link
-          href="/dashboard/people"
-          className="flex items-center gap-3 px-4 py-3 rounded-2xl hover:bg-blue-700 transition-all"
->
-          <Users size={22} />
-          <span>Pessoas</span>
+            <Menu size={22} />
 
-        </Link>
-
-        <Link
-          href="/dashboard/candidates"
-          className="flex items-center gap-3 px-4 py-3 rounded-2xl hover:bg-blue-700 transition-all"
-        >
-        
-          <Users size={22} />
-
-          <span>Candidatos</span>
-
-        </Link>
-        
-        <Link
-          href="/dashboard/apprentices"
-          className="flex items-center gap-3 px-4 py-3 rounded-2xl hover:bg-blue-700 transition-all"
-        >
-
-          <Users size={22} />
-
-          <span>Aprendizes</span>
-
-        </Link>
-
-        <div className="mt-4 mb-2 px-4">
-
-          <span className="text-xs uppercase text-blue-200">
-
-            Pedagógico
-
-          </span>
+          </button>
 
         </div>
 
-        <Link
-          href="/dashboard/pedagogical"
-          className="flex items-center gap-3 px-4 py-3 rounded-2xl hover:bg-blue-700 transition-all"
-        >
+        <nav className="space-y-2">
 
-          <GraduationCap size={22} />
+          <Link
+            href="/dashboard"
+            className="flex items-center gap-3 p-2 rounded hover:bg-gray-800"
+          >
 
-          <span>Dashboard Pedagógico</span>
+            <LayoutDashboard size={18} />
 
-        </Link>
+            {!collapsed &&
+              "Dashboard"}
 
-        <Link
-          href="/dashboard/pedagogical/attendance"
-          className="flex items-center gap-3 px-4 py-3 rounded-2xl hover:bg-blue-700 transition-all"
-        >
+          </Link>
 
-          <GraduationCap size={22} />
+          {/* GESTÃO DE PESSOAS */}
 
-          <span>Frequência</span>
+          <button
+            onClick={() =>
+              toggleGroup(
+                "people"
+              )
+            }
+            className="w-full flex items-center justify-between p-2 hover:bg-gray-800 rounded"
+          >
 
-        </Link>
+            <div className="flex items-center gap-3">
 
-        <Link
-          href="/dashboard/pedagogical/evaluations"
-          className="flex items-center gap-3 px-4 py-3 rounded-2xl hover:bg-blue-700 transition-all"
-        >
+              <Users size={18} />
 
-          <GraduationCap size={22} />
+              {!collapsed &&
+                "Gestão Pessoas"}
 
-          <span>Avaliações</span>
+            </div>
 
-        </Link>
+            {!collapsed &&
+              (
+                openGroup ===
+                "people"
+              )
 
-        <Link
-          href="/dashboard/pedagogical/risks"
-          className="flex items-center gap-3 px-4 py-3 rounded-2xl hover:bg-blue-700 transition-all"
-        >
+              ? (
+                <ChevronDown size={16} />
+              )
 
-          <GraduationCap size={22} />
+              : (
+                <ChevronRight size={16} />
+              )}
 
-          <span>Riscos Pedagógicos</span>
+          </button>
 
-        </Link>
+          {!collapsed &&
+            openGroup ===
+              "people" && (
 
-        <Link
-          href="/dashboard/contracts"
-          className="flex items-center gap-3 px-4 py-3 rounded-2xl hover:bg-blue-700 transition-all"
-        >
+            <div className="ml-8 space-y-2">
 
-          <FileText size={22} />
+              <Link href="/dashboard/people">
+                Pessoas
+              </Link>
 
-          <span>Contratos</span>
+              <br />
 
-        </Link>
+              <Link href="/dashboard/candidates">
+                Candidatos
+              </Link>
 
-        <Link
-          href="/dashboard/companies"
-          className="flex items-center gap-3 px-4 py-3 rounded-2xl hover:bg-blue-700 transition-all"
-        >
+              <br />
 
-          <Building2 size={22} />
+              <Link href="/dashboard/apprentices">
+                Aprendizes
+              </Link>
 
-          <span>Empresas</span>
+            </div>
 
-        </Link>
+          )}
 
-        <Link
-          href="/dashboard/reports"
-          className="flex items-center gap-3 px-4 py-3 rounded-2xl hover:bg-blue-700 transition-all"
-        >
 
-          <BarChart3 size={22} />
+          {/* ACOMPANHAMENTO */}
 
-          <span>Relatórios</span>
+          <button
+            onClick={() =>
+              toggleGroup("tracking")
+            }
+            className="w-full flex items-center justify-between p-2 hover:bg-gray-800 rounded"
+          >
 
-        </Link>
+            <div className="flex items-center gap-3">
 
-      </nav>
-      <div className="mt-auto pt-10">
+              <AlertTriangle size={18} />
 
-        <button
-         className="w-full flex items-center gap-3 px-4 py-3 rounded-2xl hover:bg-red-500 transition-all"
-         onClick={() => {
+              {!collapsed &&
+                "Acompanhamento"}
 
-          localStorage.removeItem("token");
+            </div>
 
-          router.push("/login");
+            {!collapsed &&
 
-        }}
-      >
+              (openGroup === "tracking")
 
-        <LogOut size={22} />
+                ? (
+                  <ChevronDown size={16} />
+                )
 
-        <span>Sair</span>
+                : (
+                  <ChevronRight size={16} />
+                )
 
-      </button>
+            }
 
-    </div>
+          </button>
+
+          {!collapsed &&
+            openGroup === "tracking" && (
+
+            <div className="ml-8 space-y-2">
+
+              <Link
+                href="/dashboard/absence"
+                className="block hover:text-yellow-300"
+              >
+                Faltas
+              </Link>
+
+              <Link
+                href="/dashboard/warnings"
+                className="block hover:text-yellow-300"
+              >
+                Advertências
+              </Link>
+
+            </div>
+
+          )}
+
+          {/* EMPRESAS */}
+
+          <button
+            onClick={() =>
+              toggleGroup(
+                "companies"
+              )
+            }
+            className="w-full flex items-center justify-between p-2 hover:bg-gray-800 rounded"
+          >
+
+            <div className="flex items-center gap-3">
+
+              <Building2 size={18} />
+
+              {!collapsed &&
+                "Empresas"}
+
+            </div>
+
+            {!collapsed &&
+              (
+                openGroup ===
+                "companies"
+              )
+
+              ? (
+                <ChevronDown size={16} />
+              )
+
+              : (
+                <ChevronRight size={16} />
+              )}
+
+          </button>
+
+          {!collapsed &&
+            openGroup ===
+              "companies" && (
+
+            <div className="ml-8 space-y-2">
+
+              <Link href="/dashboard/companies">
+                Empresas
+              </Link>
+
+              <br />
+
+              <Link href="/dashboard/contracts">
+                Contratos
+              </Link>
+
+            </div>
+
+          )}
+
+          {/* PEDAGÓGICO EXECUTIVO */}
+
+          <button
+            onClick={() =>
+              toggleGroup(
+                "executive"
+              )
+            }
+            className="w-full flex items-center justify-between p-2 hover:bg-gray-800 rounded"
+          >
+
+            <div className="flex items-center gap-3">
+
+              <GraduationCap size={18} />
+
+              {!collapsed &&
+                "Pedagógico Executivo"}
+
+            </div>
+
+            {!collapsed &&
+              (
+                openGroup ===
+                "executive"
+              )
+
+              ? (
+                <ChevronDown size={16} />
+              )
+
+              : (
+                <ChevronRight size={16} />
+              )}
+
+          </button>
+
+          {!collapsed &&
+            openGroup ===
+              "executive" && (
+
+            <div className="ml-8 space-y-2">
+
+              <Link href="/dashboard/pedagogico/cursos">
+                Cursos
+              </Link>
+
+              <br />
+
+              <Link href="/dashboard/pedagogico/aulas">
+                Aulas
+              </Link>
+
+              <br />
+
+              <Link href="/dashboard/pedagogico/turmas">
+                Turmas
+              </Link>
+
+              <br />
+
+              <Link href="/dashboard/pedagogico/matriculas">
+                Matrículas
+              </Link>
+
+              <br />
+
+              <Link href="/dashboard/pedagogico/frequencia">
+                Frequência Escolar
+              </Link>
+
+              <br />
+
+              <Link href="/dashboard/companyAttendance">
+                Frequência Empresa
+              </Link>
+
+              <br />
+
+              <Link href="/dashboard/evaluation">
+                Avaliações
+              </Link>
+
+              <br />
+
+              <Link href="/dashboard/pedagogicalNote">
+                Observações
+              </Link>
+
+            </div>
+
+          )}
+
+          {/* GESTÃO PEDAGÓGICA */}
+
+          <button
+            onClick={() =>
+              toggleGroup(
+                "management"
+              )
+            }
+            className="w-full flex items-center justify-between p-2 hover:bg-gray-800 rounded"
+          >
+
+            <div className="flex items-center gap-3">
+
+              <BarChart3 size={18} />
+
+              {!collapsed &&
+                "Gestão Pedagógica"}
+
+            </div>
+
+          </button>
+
+          {!collapsed &&
+            openGroup ===
+              "management" && (
+
+            <div className="ml-8 space-y-2">
+
+              <Link href="/dashboard/pedagogical">
+                Dashboard
+              </Link>
+
+              <br />
+
+              <Link href="/dashboard/pedagogical/attendance">
+                Frequência
+              </Link>
+
+              <br />
+
+              <Link href="/dashboard/pedagogical/evaluations">
+                Avaliações
+              </Link>
+
+              <br />
+
+              <Link href="/dashboard/pedagogical/risks">
+                Riscos
+              </Link>
+
+            </div>
+
+          )}
+
+          {/* ADMIN */}
+
+          <Link
+            href="/dashboard/reports"
+            className="flex items-center gap-3 p-2 rounded hover:bg-gray-800"
+          >
+
+            <FileText size={18} />
+
+            {!collapsed &&
+              "Relatórios"}
+
+          </Link>
+
+          <button
+            onClick={
+              handleLogout
+            }
+            className="
+              mt-8
+              bg-red-600
+              w-full
+              p-2
+              rounded
+              flex
+              items-center
+              justify-center
+              gap-2
+            "
+          >
+
+            <LogOut size={18} />
+
+            {!collapsed &&
+              "Sair"}
+
+          </button>
+
+        </nav>
+
+      </div>
+
     </aside>
 
   );

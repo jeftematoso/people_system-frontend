@@ -2,20 +2,28 @@
 
 import { useEffect, useState } from "react";
 import { warningService } from "@/services/warning.service";
+import { apprenticeService } from "@/services/apprentice.service";
 
 export default function WarningsPage() {
 
   const [warnings, setWarnings] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [apprentices, setApprentices] = useState<any[]>([]);
+
 
   const [form, setForm] = useState({
     apprenticeId: "",
     type: "LEVE",
     reason: "",
-    date: "",
+    warningDate: new Date()
+      .toISOString()
+      .split("T")[0],
   });
 
   const [open, setOpen] = useState(false);
+
+
+
 
   async function load() {
 
@@ -40,18 +48,50 @@ export default function WarningsPage() {
 
     try {
 
-      await warningService.create(form);
+      await warningService.create({
+        apprenticeId: form.apprenticeId,
+        type: form.type,
+        reason: form.reason,
+        warningDate: form.warningDate,
+      });
 
+      // fecha o modal
       setOpen(false);
 
+      // limpa formulário
       setForm({
         apprenticeId: "",
         type: "LEVE",
         reason: "",
-        date: "",
+        warningDate: new Date()
+          .toISOString()
+          .split("T")[0],
       });
 
-      load();
+      // recarrega tabela
+      await load();
+
+    } catch (err: any) {
+
+      console.log("WARNING ERROR", err);
+
+      console.log("RESPONSE", err?.response);
+
+      console.log("DATA", err?.response?.data);
+
+
+    }
+
+  }
+
+  async function loadApprentices() {
+
+    try {
+
+      const data =
+        await apprenticeService.list();
+
+      setApprentices(data);
 
     } catch (err) {
 
@@ -61,9 +101,12 @@ export default function WarningsPage() {
 
   }
 
+
   useEffect(() => {
-    load();
-  }, []);
+  load();
+  loadApprentices();
+
+}, []);
 
   return (
 
@@ -105,18 +148,15 @@ export default function WarningsPage() {
 
             <tbody>
 
-              {warnings.map((w) => (
+             {warnings.map((w) => (
 
-                <tr key={w.id} className="border-t">
-
-                  <td>{w.apprentice?.person?.name}</td>
-                  <td>{w.type}</td>
-                  <td>{w.reason}</td>
-                  <td>{w.date}</td>
-
-                </tr>
-
-              ))}
+               <tr key={w.id} className="border-t">
+                 <td>{w.apprentice?.person?.name}</td>
+                 <td>{w.type}</td>
+                 <td>{w.reason}</td>
+                 <td>{new Date(w.warningDate).toLocaleDateString("pt-BR")}</td>
+               </tr>
+            ))}
 
             </tbody>
 
@@ -137,14 +177,35 @@ export default function WarningsPage() {
               New Warning
             </h2>
 
-            <input
+            <select
               className="border p-2 w-full"
-              placeholder="Apprentice ID"
               value={form.apprenticeId}
               onChange={(e) =>
-                setForm({ ...form, apprenticeId: e.target.value })
+                setForm({
+                  ...form,
+                  apprenticeId: e.target.value,
+                })
               }
-            />
+            >
+
+              <option value="">
+                Selecione o Aprendiz
+              </option>
+
+              {apprentices.map((apprentice) => (
+
+                <option
+                  key={apprentice.id}
+                  value={apprentice.id}
+                >
+
+                  {apprentice.person?.name}
+
+                </option>
+
+              ))}
+
+            </select>
 
             <select
               className="border p-2 w-full"
@@ -172,12 +233,15 @@ export default function WarningsPage() {
             <input
               type="date"
               className="border p-2 w-full"
-              value={form.date}
+              value={form.warningDate}
               onChange={(e) =>
-                setForm({ ...form, date: e.target.value })
+                setForm({
+                  ...form,
+                  warningDate: e.target.value,
+                })
               }
             />
-
+            
             <div className="flex justify-end gap-2">
 
               <button onClick={() => setOpen(false)}>

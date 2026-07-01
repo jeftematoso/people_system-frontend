@@ -2,17 +2,20 @@
 
 import { useEffect, useState } from "react";
 import { absenceService } from "@/services/absence.service";
+import { apprenticeService } from "@/services/apprentice.service";
 
 export default function AbsencePage() {
 
   const [absences, setAbsences] = useState<any[]>([]);
+  const [apprentices, setApprentices] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+
 
   const [form, setForm] = useState({
     apprenticeId: "",
     type: "TEORICO",
     justified: false,
-    date: "",
+    date: new Date().toISOString().split("T")[0],
   });
 
   const [open, setOpen] = useState(false);
@@ -21,7 +24,9 @@ export default function AbsencePage() {
 
     try {
 
-      const data = await absenceService.list();
+      const data =
+        await absenceService.list();
+
       setAbsences(data);
 
     } catch (err) {
@@ -38,20 +43,60 @@ export default function AbsencePage() {
 
   async function handleCreate() {
 
+  try {
+
+    await absenceService.create({
+          apprenticeId: form.apprenticeId,
+          type: form.type,
+          justified: form.justified,
+          date: form.date,
+        });
+
+        setOpen(false);
+
+        setForm({
+          apprenticeId: "",
+          type: "TEORICO",
+          justified: false,
+          date: "",
+        });
+
+        load();
+
+      } catch (err) {
+
+        console.log(err);
+
+      }
+
+    } // <-- ESTA CHAVE ESTAVA FALTANDO
+
+    async function loadApprentices() {
+
+      try {
+
+        const data =
+          await apprenticeService.list();
+
+        setApprentices(data);
+
+      } catch (err) {
+
+        console.log(err);
+
+      }
+
+    }
+
+
+  async function loadApprentices() {
+
     try {
 
-      await absenceService.create(form);
+      const data =
+        await apprenticeService.list();
 
-      setOpen(false);
-
-      setForm({
-        apprenticeId: "",
-        type: "TEORICO",
-        justified: false,
-        date: "",
-      });
-
-      load();
+      setApprentices(data);
 
     } catch (err) {
 
@@ -61,8 +106,13 @@ export default function AbsencePage() {
 
   }
 
+
   useEffect(() => {
-    load();
+
+  load();
+
+  loadApprentices();
+
   }, []);
 
   return (
@@ -112,7 +162,7 @@ export default function AbsencePage() {
                   <td>{a.apprentice?.person?.name}</td>
                   <td>{a.type}</td>
                   <td>{a.justified ? "Yes" : "No"}</td>
-                  <td>{a.date}</td>
+                  <td>{new Date(a.date).toLocaleDateString("pt-BR",{timeZone: "America/Sao_Paulo",})}</td>
 
                 </tr>
 
@@ -137,14 +187,35 @@ export default function AbsencePage() {
               New Absence
             </h2>
 
-            <input
+            <select
               className="border p-2 w-full"
-              placeholder="Apprentice ID"
               value={form.apprenticeId}
               onChange={(e) =>
-                setForm({ ...form, apprenticeId: e.target.value })
+                setForm({
+                  ...form,
+                  apprenticeId: e.target.value,
+                })
               }
-            />
+            >
+
+              <option value="">
+                Select Apprentice
+              </option>
+
+              {apprentices.map((apprentice) => (
+
+                <option
+                  key={apprentice.id}
+                  value={apprentice.id}
+                >
+
+                  {apprentice.person?.name}
+
+                </option>
+
+              ))}
+
+            </select>
 
             <select
               className="border p-2 w-full"
@@ -164,7 +235,10 @@ export default function AbsencePage() {
               className="border p-2 w-full"
               value={form.date}
               onChange={(e) =>
-                setForm({ ...form, date: e.target.value })
+                setForm({
+                  ...form,
+                  date: e.target.value,
+                })
               }
             />
 
