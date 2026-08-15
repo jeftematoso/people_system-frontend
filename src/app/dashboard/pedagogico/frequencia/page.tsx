@@ -1,272 +1,550 @@
 "use client";
 
 import { useEffect, useState } from "react";
-
 import { api } from "@/services/api";
 
-import {
-  lessonAttendanceService,
-} from "@/services/lessonAttendance.service";
+export default function LessonAttendancePage() {
 
-export default function FrequenciaPage() {
+  const [classrooms, setClassrooms] =
+    useState<any[]>([]);
 
   const [lessons, setLessons] =
     useState<any[]>([]);
 
-  const [lessonId, setLessonId] =
-    useState("");
+  const [filteredLessons, setFilteredLessons] =
+    useState<any[]>([]);
 
   const [students, setStudents] =
     useState<any[]>([]);
 
-  async function loadLessons() {
+  const [attendance, setAttendance] =
+    useState<any>({});
+
+  const [savedAttendance, setSavedAttendance] =
+  useState<any[]>([]);
+
+  const [classRoomId, setClassRoomId] =
+    useState("");
+
+  const [lessonId, setLessonId] =
+    useState("");
+
+  async function loadData() {
 
     try {
 
-      const lessonRes =
-        await api.get("/lesson");
+      const [classroomRes, lessonRes] =
+        await Promise.all([
 
-      console.log("LESSONS STATUS:");
-      console.log(lessonRes.status);
+          api.get("/classroom"),
 
-      console.log("LESSONS DATA:");
-      console.log(lessonRes.data);
+          api.get("/lesson"),
 
-      setLessons(
-        lessonRes.data
-      );
+        ]);
 
-    } catch (error: any) {
+      setClassrooms(classroomRes.data);
 
-      console.error("ERRO LESSON");
+      setLessons(lessonRes.data);
 
-      console.log(
-        "STATUS:",
-        error?.response?.status
-      );
+    } catch (error) {
 
-      console.log(
-        "DATA:",
-        error?.response?.data
-      );
+      console.error(error);
 
     }
 
   }
 
-  async function loadStudents() {
+  function handleClassroomChange(
+    id: string
+  ) {
 
-    if (!lessonId) return;
+    setClassRoomId(id);
 
-    const lesson =
-      lessons.find(
-        (l) => l.id === lessonId
+    setLessonId("");
+
+    setStudents([]);
+
+    setAttendance({});
+
+    const list =
+      lessons.filter(
+
+        lesson =>
+
+          lesson.classRoomId === id
+
       );
 
-    if (!lesson) return;
-
-    const enrollments =
-      await api.get(
-        `/enrollment/classroom/${lesson.classRoomId}`
-      );
-
-    setStudents(enrollments.data);
+    setFilteredLessons(list);
 
   }
 
-  async function saveAttendance(
-    apprenticeId: string,
-    present: boolean
+  async function loadStudents(
+    selectedLessonId: string
   ) {
 
-    await lessonAttendanceService.save(
-      lessonId,
-      apprenticeId,
-      present
-    );
+    try {
 
-    alert("Frequência salva");
+      const lesson =
+        lessons.find(
+          item => item.id === selectedLessonId
+        );
+
+      if (!lesson) return;
+
+      const [
+
+        enrollmentRes,
+
+        attendanceRes,
+
+      ] = await Promise.all([
+
+        api.get(
+          `/enrollment/classroom/${lesson.classRoomId}`
+        ),
+
+        api.get(
+          `/lesson-attendance?lessonId=${selectedLessonId}`
+        ),
+
+      ]);
+
+      setStudents(
+        enrollmentRes.data
+      );
+
+      setSavedAttendance(
+        attendanceRes.data
+      );
+
+      const initialAttendance:any = {};
+
+      enrollmentRes.data.forEach(
+        (student:any) => {
+
+          const existing =
+            attendanceRes.data.find(
+              (item:any)=>
+
+                item.apprenticeId ===
+                student.apprenticeId
+
+            );
+
+          initialAttendance[
+            student.apprenticeId
+          ] = existing
+              ? existing.present
+              : true;
+
+        }
+      );
+
+      setAttendance(
+        initialAttendance
+      );
+
+    }
+
+    catch(error){
+
+      console.error(error);
+
+    }
+
+  }
+  ///////
+  async function saveAttendance() {
+
+    try {
+
+      for (const student of students) {
+
+        await api.post(
+
+          "/lesson-attendance",
+
+          {
+
+            lessonId,
+
+            apprenticeId:
+              student.apprenticeId,
+
+            present:
+              attendance[
+                student.apprenticeId
+              ],
+
+            justified: false,
+
+            justification: null,
+
+          }
+
+        );
+
+      }
+
+      alert("Frequência salva com sucesso!");
+
+    } catch (error) {
+
+      console.error(error);
+
+      alert("Erro ao salvar frequência.");
+
+    }
 
   }
 
   useEffect(() => {
 
-    loadLessons();
+    loadData();
 
   }, []);
 
-  useEffect(() => {
-
-    loadStudents();
-
-  }, [lessonId]);
-
   return (
 
-    <div className="p-8">
+  <div className="p-8">
 
-      <h1 className="text-4xl font-bold mb-8">
+    <h1 className="text-3xl font-bold mb-8">
 
-        Frequência
+      Frequência das Aulas
 
-      </h1>
+    </h1>
 
-      <div className="bg-white rounded-2xl shadow-md p-6 mb-8">
+    <div className="bg-white rounded-2xl shadow-md p-6">
+
+      <div className="grid md:grid-cols-2 gap-4 mb-6">
 
         <select
-          value={lessonId}
+
+          value={classRoomId}
+
           onChange={(e) =>
-            setLessonId(
+
+            handleClassroomChange(
+
               e.target.value
+
             )
+
           }
-          className="
-            border
-            p-3
-            rounded-xl
-            w-full
-          "
+
+          className="border p-3 rounded-xl"
+
         >
 
           <option value="">
 
-            Selecione uma aula
+            Selecione a turma
 
           </option>
 
-          {lessons.map(
-            (lesson) => (
+          {classrooms.map((classroom) => (
 
-              <option
-                key={lesson.id}
-                value={lesson.id}
-              >
+            <option
 
-                {lesson.title}
+              key={classroom.id}
 
-              </option>
+              value={classroom.id}
 
-            )
-          )}
+            >
+
+              {classroom.name}
+
+            </option>
+
+          ))}
+
+        </select>
+
+        <select
+
+          value={lessonId}
+
+          onChange={(e) => {
+
+            setLessonId(
+
+              e.target.value
+
+            );
+
+            loadStudents(
+
+              e.target.value
+
+            );
+
+          }}
+
+          className="border p-3 rounded-xl"
+
+          disabled={!classRoomId}
+
+        >
+
+          <option value="">
+
+            Selecione a aula
+
+          </option>
+
+          {filteredLessons.map((lesson) => (
+
+            <option
+
+              key={lesson.id}
+
+              value={lesson.id}
+
+            >
+
+              {lesson.title} •{" "}
+
+              {new Date(
+
+                lesson.lessonDate
+
+              ).toLocaleDateString(
+
+                "pt-BR"
+
+              )}
+
+            </option>
+
+          ))}
 
         </select>
 
       </div>
 
-      <div className="bg-white rounded-2xl shadow-md p-6">
+      {students.length > 0 && (
 
-        <table className="w-full">
+        <>
 
-          <thead>
+          <div className="mb-6 flex justify-between">
 
-            <tr className="border-b">
+            <div>
 
-              <th className="text-left pb-4">
+              <h2 className="text-xl font-bold">
 
-                Aprendiz
+                Aprendizes
 
-              </th>
+              </h2>
 
-              <th className="text-left pb-4">
+              <p className="text-gray-500">
 
-                Presente
+                Marque a presença da aula.
 
-              </th>
+              </p>
 
-              <th className="text-left pb-4">
+            </div>
 
-                Falta
+            <div className="text-right">
 
-              </th>
+              <p>
 
-            </tr>
+                Presentes:{" "}
 
-          </thead>
+                <strong>
 
-          <tbody>
+                  {
 
-            {students.map(
-              (student) => (
+                    Object.values(
 
-                <tr
-                  key={student.id}
-                  className="border-b"
-                >
+                      attendance
 
-                  <td className="py-4">
+                    ).filter(Boolean)
+
+                      .length
+
+                  }
+
+                </strong>
+
+              </p>
+
+              <p>
+
+                Ausentes:{" "}
+
+                <strong>
+
+                  {
+
+                    students.length -
+
+                    Object.values(
+
+                      attendance
+
+                    ).filter(Boolean)
+
+                      .length
+
+                  }
+
+                </strong>
+
+              </p>
+
+            </div>
+
+          </div>
+
+          <div className="space-y-3">
+
+            {students.map((item: any) => (
+
+              <div
+
+                key={item.id}
+
+                className="
+
+                  flex
+
+                  justify-between
+
+                  items-center
+
+                  border
+
+                  rounded-xl
+
+                  p-4
+
+                "
+
+              >
+
+                <div>
+
+                  <p className="font-semibold">
 
                     {
-                      student.apprentice
+
+                      item.apprentice
+
                         ?.person?.name
+
                     }
 
-                  </td>
+                  </p>
 
-                  <td>
+                </div>
 
-                    <button
+                <label className="flex items-center gap-3">
 
-                      onClick={() =>
-                        saveAttendance(
-                          student.apprenticeId,
-                          true
-                        )
-                      }
+                  <span
 
-                      className="
-                        bg-green-500
-                        text-white
-                        px-4
-                        py-2
-                        rounded-xl
-                      "
-                    >
+                    className={
 
-                      Presente
+                      attendance[
 
-                    </button>
+                        item.apprenticeId
 
-                  </td>
+                      ]
 
-                  <td>
+                        ? "text-green-600 font-semibold"
 
-                    <button
+                        : "text-red-600 font-semibold"
 
-                      onClick={() =>
-                        saveAttendance(
-                          student.apprenticeId,
-                          false
-                        )
-                      }
+                    }
 
-                      className="
-                        bg-red-500
-                        text-white
-                        px-4
-                        py-2
-                        rounded-xl
-                      "
-                    >
+                  >
 
-                      Falta
+                    {attendance[
 
-                    </button>
+                      item.apprenticeId
 
-                  </td>
+                    ]
 
-                </tr>
+                      ? "Presente"
 
-              )
-            )}
+                      : "Ausente"}
 
-          </tbody>
+                  </span>
 
-        </table>
+                  <input
 
-      </div>
+                    type="checkbox"
+
+                    checked={
+
+                      attendance[
+
+                        item.apprenticeId
+
+                      ] || false
+
+                    }
+
+                    onChange={(e) =>
+
+                      setAttendance({
+
+                        ...attendance,
+
+                        [item.apprenticeId]:
+
+                          e.target.checked,
+
+                      })
+
+                    }
+
+                  />
+
+                </label>
+
+              </div>
+
+            ))}
+
+          </div>
+
+          <button
+
+            onClick={saveAttendance}
+
+            className="
+
+              mt-8
+
+              bg-blue-600
+
+              hover:bg-blue-700
+
+              text-white
+
+              px-6
+
+              py-3
+
+              rounded-xl
+
+            "
+
+          >
+
+            Salvar Frequência
+
+          </button>
+
+        </>
+
+      )}
 
     </div>
 
-  );
+  </div>
+
+);
 
 }
